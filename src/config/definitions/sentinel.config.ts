@@ -1,0 +1,11 @@
+export interface SentinelProviderConfig {
+	clientId: string
+	clientSecret: string
+}
+
+export interface SentinelConfig {
+	restHost: string
+	google: SentinelProviderConfig
+	discord: SentinelProviderConfig
+	github: SentinelProviderConfig
+}

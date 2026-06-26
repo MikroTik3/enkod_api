@@ -1,0 +1,402 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "./generated"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model User {
+    id String @id @default(uuid())
+
+    email    String? @unique
+    password String?
+
+    username    String @unique
+    displayName String @map("display_name")
+
+    avatar String?
+    points Int     @default(0)
+
+    role UserRole @default(STUDENT)
+
+    isAutoBilling Boolean @default(false) @map("is_auto_billing")
+
+    emailVerification EmailVerification?
+    passwordReset     PasswordReset?
+
+    externalAccounts ExternalAccount[]
+    userProgress     UserProgress[]
+    downloadLogs     DownloadLog[]
+
+    mfa          MultiFactorAuthentication?
+    restrictions Restriction[]
+
+    subscription Subscription?
+    payments Payment[]
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("users")
+}
+
+model ExternalAccount {
+    id String @id @default(uuid())
+
+    provider          AccountProvider
+    providerAccountId String          @unique @map("provider_account_id")
+
+    refreshToken String? @map("refresh_token")
+    accessToken  String? @map("access_token")
+    expiry       Int?
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String @map("user_id")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@unique([userId, provider])
+    @@map("external_accounts")
+}
+
+model EmailVerification {
+    id String @id @default(uuid())
+
+    token  String    @unique
+    expiry DateTime?
+
+    status EmailVerificationStatus @default(PENDING)
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String @unique @map("user_id")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("email_verification")
+}
+
+model PasswordReset {
+    id String @id @default(uuid())
+
+    token  String   @unique
+    expiry DateTime
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String @unique @map("user_id")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("password_resets")
+}
+
+model MultiFactorAuthentication {
+    id String @id @default(uuid())
+
+    recoveryCodes String[] @default([]) @map("recovery_codes")
+
+    currentChallenge String?   @map("current_challenge")
+    passkeys         Passkey[]
+
+    totp   Totp?   @relation(fields: [totpId], references: [id], onDelete: Cascade)
+    totpId String? @unique @map("totp_id")
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String @unique @map("user_id")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("multi_factor_authentication")
+}
+
+model Totp {
+    id String @id @default(uuid())
+
+    status TotpStatus @default(DISABLED)
+    secret String?
+
+    mfa MultiFactorAuthentication?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("totps")
+}
+
+model Passkey {
+    id String @id @default(uuid())
+
+    deviceName String @map("device_name")
+
+    credentialId String   @unique @map("credential_id")
+    publicKey    String   @map("public_key")
+    counter      Int      @default(0)
+    transports   String[]
+
+    lastUsedAt DateTime? @map("last_used_at")
+
+    ip        String
+    userAgent String @map("user_agent")
+
+    mfa   MultiFactorAuthentication @relation(fields: [mfaId], references: [id], onDelete: Cascade)
+    mfaId String                    @map("mfa_id")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("passkeys")
+}
+
+model Restriction {
+    id String @id @default(uuid())
+
+    reason RestrictionReason
+    until  DateTime?
+
+    status RestrictionStatus @default(ACTIVE)
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String @map("user_id")
+
+    createdAt DateTime @default(now()) @map("created_at")
+
+    @@map("restrictions")
+}
+
+model Course {
+    id String @id @default(uuid())
+
+    title String
+    slug  String @unique
+
+    shortDescription String? @map("short_description")
+    fullDescription  String? @map("full_description")
+
+    thumbnail String?
+
+    youtubeUrl String? @map("youtube_url")
+    attachment String?
+
+    isPublished Boolean @default(false) @map("is_published")
+
+    views Int @default(0)
+
+    lessons      Lesson[]
+    downloadLogs DownloadLog[]
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("courses")
+}
+
+model Lesson {
+    id String @id @default(uuid())
+
+    title String
+    slug  String @unique
+
+    description String?
+    position    Int
+
+    kinescopeId String? @map("kinescope_id")
+
+    isPublished Boolean @default(false) @map("is_published")
+
+    userProgress UserProgress[]
+
+    course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId String @map("course_id")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("lessons")
+}
+
+model UserProgress {
+    id String @id @default(uuid())
+
+    isCompleted Boolean @default(false) @map("is_completed")
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String @map("user_id")
+
+    lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+    lessonId String @map("lesson_id")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@unique([userId, lessonId])
+    @@index([lessonId])
+    @@map("user_progress")
+}
+
+model DownloadLog {
+    id String @id @default(uuid())
+
+    token String
+
+    ip        String?
+    userAgent String? @map("user_agent")
+
+    downloadedAt DateTime @default(now()) @map("downloaded_at")
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String @map("user_id")
+
+    course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId String @map("course_id")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("download_logs")
+}
+
+model Subscription {
+       id String @id @default(uuid())
+
+       user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+       userId String @unique @map("user_id")
+
+       status SubscriptionStatus @default(PENDING)
+
+       plan SubscriptionPlan
+       interval SubscriptionInterval @default(MONTHLY)
+
+       amount Int
+       currency Int @default(980)
+
+       subscriptionId String? @unique @map("subscription_id")
+
+       startedAt DateTime? @map("started_at")
+       nextChargeAt DateTime? @map("next_charge_at")
+       endedAt DateTime? @map("ended_at")
+
+       payments Payment[]
+
+       createdAt DateTime @default(now()) @map("created_at")
+       updatedAt DateTime @updatedAt @map("updated_at")
+
+       @@map("subscriptions")
+}
+
+model Payment {
+       id String @id @default(uuid())
+
+       subscriptionId String @map("subscription_id")
+       subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+       
+       userId String @map("user_id")
+       user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+       
+       status PaymentStatus @default(PENDING)
+
+       provider PaymentProvider @default(MONOBANK)
+
+       amount Int
+       currency Int @default(980)
+
+       transactionId String? @unique @map("transaction_id")
+
+       failureReason String? @map("failure_reason")
+
+       raw Json?
+
+       createdAt DateTime @default(now())
+       updatedAt DateTime @updatedAt
+
+       @@map("payments")
+}
+
+enum UserRole {
+    STUDENT
+    ADMIN
+
+    @@map("user_roles")
+}
+
+enum AccountProvider {
+    GOOGLE
+    GITHUB
+    DISCORD
+    TELEGRAM
+    GITLAB
+
+    @@map("account_providers")
+}
+
+enum EmailVerificationStatus {
+    PENDING
+    VERIFIED
+
+    @@map("email_verification_statuses")
+}
+
+enum TotpStatus {
+    DISABLED
+    PENDING
+    ENABLED
+
+    @@map("totp_statuses")
+}
+
+enum RestrictionReason {
+    INAPPROPRIATE_USERNAME
+    SPAM
+    OFFENSIVE_BEHAVIOR
+
+    @@map("restriction_reasons")
+}
+
+enum RestrictionStatus {
+    ACTIVE
+    EXPIRED
+    CANCELED
+
+    @@map("restriction_statuses")
+}
+
+enum SubscriptionStatus {
+       ACTIVE
+       CANCELLED
+       FAILED
+       PENDING
+       EXPIRED
+
+       @@map("subscription_statuses")
+}
+
+enum SubscriptionPlan {
+       PREMIUM
+
+       @@map("subscription_plans")
+}
+
+enum SubscriptionInterval {
+       MONTHLY
+
+       @@map("subscription_interval")
+}
+
+enum PaymentStatus {
+       PENDING
+       SUCCESS
+       FAILED
+       REVERSED
+
+       @@map("payment_statuses")
+}
+
+enum PaymentProvider {
+       MONOBANK
+
+       @@map("payment_providers")
+}
