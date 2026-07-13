@@ -4,7 +4,7 @@ import { User } from '@prisma/generated'
 
 import { Authorization, Authorized } from '@/shared/decorators'
 
-import { InitSubscriptionRequest, InitSubscriptionResponse } from './dto'
+import { InitSubscriptionResponse } from './dto'
 import { SubscriptionService } from './subscription.service'
 
 @Controller('subscription')
@@ -21,7 +21,7 @@ export class SubscriptionController {
 	@Authorization()
 	@Post('init')
 	@HttpCode(HttpStatus.OK)
-	public async init(@Body() dto: InitSubscriptionRequest, @Authorized() user: User) {
-		return await this.subscription.create(dto, user)
+	public async init(@Authorized() user: User) {
+		return await this.subscription.create(user)
 	}
 }

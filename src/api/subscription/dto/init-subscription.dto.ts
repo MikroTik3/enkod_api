@@ -1,15 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsEnum, IsInt, IsOptional, IsString, IsUrl, Min } from 'class-validator'
+import { ApiProperty } from '@nestjs/swagger'
+import { IsInt, Min } from 'class-validator'
 
 export enum PlanInterval {
 	MONTHLY = '1m'
-}
-
-export class InitSubscriptionRequest {
-	@ApiProperty({ example: 29900, description: 'Сума в копійках (UAH * 100)' })
-	@IsInt()
-	@Min(1)
-	amount: number
 }
 
 export class InitSubscriptionResponse {

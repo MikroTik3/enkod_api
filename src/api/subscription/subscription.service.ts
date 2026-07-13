@@ -5,7 +5,7 @@ import { MonobankService } from 'nestjs-monobank'
 
 import { PrismaService } from '@/infra/prisma/prisma.service'
 
-import { InitSubscriptionRequest, InitSubscriptionResponse } from './dto'
+import { InitSubscriptionResponse } from './dto'
 
 @Injectable()
 export class SubscriptionService {
@@ -15,9 +15,7 @@ export class SubscriptionService {
 		private readonly configService: ConfigService
 	) {}
 
-	public async create(dto: InitSubscriptionRequest, user?: User) {
-		const { amount } = dto
-
+	public async create(user?: User) {
 		const existing = await this.prismaService.subscription.findFirst({
 			where: {
 				userId: user.id,
@@ -28,7 +26,7 @@ export class SubscriptionService {
 		if (existing?.status === SubscriptionStatus.ACTIVE || existing?.status === SubscriptionStatus.PENDING) throw new BadRequestException('Subscription already exists')
 
 		const subscription = await this.monobankService.subscriptions.create({
-			amount,
+			amount: this.parseAmount(275),
 			interval: '1m',
 			redirectUrl: `${this.configService.get('HOSTS_APP')}/payment/success`,
 			webhookUrls: {
@@ -42,7 +40,7 @@ export class SubscriptionService {
 			update: {
 				subscriptionId: subscription.subscriptionId,
 				userId: user.id,
-				amount,
+				amount: this.parseAmount(275),
 				interval: SubscriptionInterval.MONTHLY,
 				plan: SubscriptionPlan.PREMIUM,
 				status: SubscriptionStatus.PENDING
@@ -50,7 +48,7 @@ export class SubscriptionService {
 			create: {
 				subscriptionId: subscription.subscriptionId,
 				userId: user.id,
-				amount,
+				amount: this.parseAmount(275),
 				interval: SubscriptionInterval.MONTHLY,
 				plan: SubscriptionPlan.PREMIUM,
 				status: SubscriptionStatus.PENDING
@@ -61,5 +59,9 @@ export class SubscriptionService {
 			subscriptionId: subscription.subscriptionId,
 			pageUrl: subscription.pageUrl
 		} satisfies InitSubscriptionResponse
+	}
+
+	private parseAmount(amount: number) {
+		return amount * 100
 	}
 }

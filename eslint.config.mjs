@@ -49,6 +49,7 @@ export default tseslint.config(
       'no-shadow': 'off',
       'import/no-cycle': 'off',
       'no-useless-escape': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
       'consistent-return': 'off',
       'no-underscore-dangle': 'off',
       'max-classes-per-file': 'off',
