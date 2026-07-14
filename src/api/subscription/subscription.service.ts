@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { SubscriptionInterval, SubscriptionPlan, SubscriptionStatus, type User } from '@prisma/generated'
+import { SubscriptionInterval, SubscriptionPlan, SubscriptionStatus, type User, UserRole } from '@prisma/generated'
 import { MonobankService } from 'nestjs-monobank'
 
 import { PrismaService } from '@/infra/prisma/prisma.service'
+import { MailService } from '@/libs/mail/mail.service'
 
 import { InitSubscriptionResponse } from './dto'
 
@@ -11,22 +12,26 @@ import { InitSubscriptionResponse } from './dto'
 export class SubscriptionService {
 	public constructor(
 		private readonly prismaService: PrismaService,
+		private readonly mailService: MailService,
 		private readonly monobankService: MonobankService,
 		private readonly configService: ConfigService
 	) {}
 
-	public async create(user?: User) {
-		const existing = await this.prismaService.subscription.findFirst({
-			where: {
-				userId: user.id,
-				status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.PENDING] }
-			}
+	public async create(user: User) {
+		const existing = await this.prismaService.subscription.findUnique({
+			where: { userId: user.id }
 		})
 
-		if (existing?.status === SubscriptionStatus.ACTIVE || existing?.status === SubscriptionStatus.PENDING) throw new BadRequestException('Subscription already exists')
+		if (existing && (existing.status === SubscriptionStatus.ACTIVE || existing.status === SubscriptionStatus.PENDING)) {
+			throw new BadRequestException('Subscription already exists')
+		}
+
+		if (existing && existing.endedAt && existing.endedAt > new Date()) {
+			throw new BadRequestException('У вас вже є активна підписка. Нову можна оформити після закінчення поточного періоду.')
+		}
 
 		const subscription = await this.monobankService.subscriptions.create({
-			amount: this.parseAmount(275),
+			amount: 27500,
 			interval: '1m',
 			redirectUrl: `${this.configService.get('HOSTS_APP')}/payment/success`,
 			webhookUrls: {
@@ -37,21 +42,23 @@ export class SubscriptionService {
 
 		await this.prismaService.subscription.upsert({
 			where: { userId: user.id },
-			update: {
-				subscriptionId: subscription.subscriptionId,
+			create: {
 				userId: user.id,
-				amount: this.parseAmount(275),
+				subscriptionId: subscription.subscriptionId,
+				amount: 27500,
 				interval: SubscriptionInterval.MONTHLY,
 				plan: SubscriptionPlan.PREMIUM,
 				status: SubscriptionStatus.PENDING
 			},
-			create: {
+			update: {
 				subscriptionId: subscription.subscriptionId,
-				userId: user.id,
-				amount: this.parseAmount(275),
+				amount: 27500,
 				interval: SubscriptionInterval.MONTHLY,
 				plan: SubscriptionPlan.PREMIUM,
-				status: SubscriptionStatus.PENDING
+				status: SubscriptionStatus.PENDING,
+				startedAt: null,
+				nextChargeAt: null,
+				endedAt: null
 			}
 		})
 
@@ -59,9 +66,5 @@ export class SubscriptionService {
 			subscriptionId: subscription.subscriptionId,
 			pageUrl: subscription.pageUrl
 		} satisfies InitSubscriptionResponse
-	}
-
-	private parseAmount(amount: number) {
-		return amount * 100
 	}
 }

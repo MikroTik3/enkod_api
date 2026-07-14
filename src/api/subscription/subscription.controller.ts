@@ -22,6 +22,6 @@ export class SubscriptionController {
 	@Post('init')
 	@HttpCode(HttpStatus.OK)
 	public async init(@Authorized() user: User) {
-		return await this.subscription.create(user)
+		return this.subscription.create(user)
 	}
 }

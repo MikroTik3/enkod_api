@@ -299,7 +299,6 @@ export class UsersService {
 		if (user.isAutoBilling) {
 			if (subscription) {
 				await this.monobankService.subscriptions.editSubscription({
-					refundAmount: subscription.amount,
 					subscriptionId: subscription.subscriptionId,
 					action: 'cancel'
 				})

@@ -1,7 +1,7 @@
 import { MailerService } from '@nestjs-modules/mailer'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Injectable } from '@nestjs/common'
-import type { Payment, Restriction, Subscription, User } from '@prisma/generated'
+import type { Restriction, User } from '@prisma/generated'
 import { render } from '@react-email/components'
 import { Queue } from 'bullmq'
 
@@ -48,6 +48,10 @@ export class MailService {
 
 		return true
 	}
+
+	public async sendSubscriptionBlocked(user: User) {}
+
+	public async sendSubscriptionSuccess(user: User) {}
 
 	public sendMail(email: string, subject: string, html: string) {
 		return this.mailerService.sendMail({

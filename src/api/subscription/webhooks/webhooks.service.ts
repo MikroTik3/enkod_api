@@ -49,11 +49,17 @@ export class WebhooksService {
 		}
 
 		const subscription = await this.prismaService.subscription.update({
-			where: { subscriptionId: payload.subscriptionId },
+			where: {
+				subscriptionId: payload.subscriptionId
+			},
 			data: {
 				status: statusMap[payload.status],
+
 				startedAt: payload.status === 'active' ? new Date() : undefined,
-				endedAt: ['cancelled', 'expired'].includes(payload.status) ? new Date() : undefined
+
+				nextChargeAt: payload.nextChargeDate ? new Date(payload.nextChargeDate) : undefined,
+
+				endedAt: payload.nextChargeDate ? new Date(payload.nextChargeDate) : undefined
 			}
 		})
 
@@ -99,9 +105,7 @@ export class WebhooksService {
 			await this.prismaService.subscription.update({
 				where: { id: subscription.id },
 				data: {
-					nextChargeAt: subscriptionStatus.nextChargeDate ? new Date(subscriptionStatus.nextChargeDate) : null,
-
-					status: SubscriptionStatus.ACTIVE
+					nextChargeAt: subscriptionStatus.nextChargeDate ? new Date(subscriptionStatus.nextChargeDate) : null
 				}
 			})
 
