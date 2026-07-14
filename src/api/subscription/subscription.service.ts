@@ -22,12 +22,12 @@ export class SubscriptionService {
 			where: { userId: user.id }
 		})
 
-		if (existing && (existing.status === SubscriptionStatus.ACTIVE || existing.status === SubscriptionStatus.PENDING)) {
-			throw new BadRequestException('Subscription already exists')
-		}
-
 		if (existing && existing.endedAt && existing.endedAt > new Date()) {
 			throw new BadRequestException('У вас вже є активна підписка. Нову можна оформити після закінчення поточного періоду.')
+		}
+
+		if (existing && existing.status === SubscriptionStatus.PENDING) {
+			throw new BadRequestException('Завершіть оплату поточної підписки.')
 		}
 
 		const subscription = await this.monobankService.subscriptions.create({

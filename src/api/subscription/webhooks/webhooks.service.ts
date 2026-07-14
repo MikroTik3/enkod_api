@@ -70,6 +70,29 @@ export class WebhooksService {
 			}
 		})
 
+		if (payload.status === 'active') {
+			const [user, payment] = await Promise.all([
+				this.prismaService.user.findUniqueOrThrow({
+					where: {
+						id: subscription.userId
+					}
+				}),
+				this.prismaService.payment.findFirst({
+					where: {
+						subscriptionId: subscription.id,
+						status: PaymentStatus.SUCCESS
+					},
+					orderBy: {
+						createdAt: 'desc'
+					}
+				})
+			])
+
+			if (payment) {
+				await this.mailService.sendSubscriptionSuccess(user, payment, subscription)
+			}
+		}
+
 		this.logger.log(`Subscription status updated | subscriptionId: ${payload.subscriptionId} → ${payload.status}`)
 	}
 
@@ -109,9 +132,6 @@ export class WebhooksService {
 				}
 			})
 
-			// await this.mailService.sendPaymentSuccess(subscription.userId)
-			// await this.botService.notifyPaymentSuccess(subscription.userId)
-
 			this.logger.log(`Payment success | subscriptionId: ${subscription.subscriptionId} | nextChargeAt: ${subscriptionStatus.nextChargeDate}`)
 		} else {
 			const failedCount = await this.prismaService.payment.count({
@@ -129,9 +149,6 @@ export class WebhooksService {
 					data: { isAutoBilling: false }
 				})
 			}
-
-			// await this.mailService.sendPaymentSuccess(subscription.userId)
-			// await this.botService.notifyPaymentSuccess(subscription.userId)
 
 			this.logger.warn(`Payment failed | subscriptionId: ${subscription.subscriptionId} | reason: ${payload.failureReason}`)
 		}
