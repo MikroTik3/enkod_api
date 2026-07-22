@@ -68,7 +68,7 @@ export function RestrictionLiftedTemplate({
 
 					<Text>
 						Ваш акаунт знову активний. Дякуємо, що залишаєтеся частиною
-						спільноти TeaCoder!
+						спільноти Enkod!
 					</Text>
 				</Body>
 			</Tailwind>

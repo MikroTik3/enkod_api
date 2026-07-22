@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
-import { EmailVerificationStatus, type User } from '@prisma/generated'
+import { EmailVerificationStatus, SubscriptionStatus, type User } from '@prisma/generated'
 import { hash } from 'argon2'
 import { randomBytes } from 'crypto'
 
@@ -34,7 +34,8 @@ export class AccountService {
 		})
 
 		const isEmailVerified = emailVerification ? emailVerification.status === EmailVerificationStatus.VERIFIED : false
-		const isPremium = !!(subscription && subscription.status === 'ACTIVE' && (!subscription.endedAt || subscription.endedAt > new Date()))
+		const isPremium =
+			!!subscription && (subscription.status === SubscriptionStatus.ACTIVE || subscription.status === SubscriptionStatus.CANCELLED) && subscription.endedAt > new Date()
 
 		return {
 			id: user.id,

@@ -241,7 +241,10 @@ export class UsersService {
 		})
 
 		return users.map(user => {
-			const isPremium = !!(user.subscription?.status === SubscriptionStatus.ACTIVE && (!user.subscription.endedAt || user.subscription.endedAt > new Date()))
+			const isPremium =
+				!!user.subscription &&
+				(user.subscription.status === SubscriptionStatus.ACTIVE || user.subscription.status === SubscriptionStatus.CANCELLED) &&
+				user.subscription.endedAt > new Date()
 
 			return {
 				id: user.id,

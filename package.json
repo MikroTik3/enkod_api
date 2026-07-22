@@ -1,14 +1,14 @@
 {
 	"name": "enkod_api",
 	"version": "0.0.1",
-	"private": true,
 	"description": "Backend for Enkod platform",
-	"license": "AGPL-3.0-only",
 	"author": {
 		"name": "Artur",
 		"url": "https://docenko.vercel.app",
 		"email": "dotsenk20034@gmail.com"
 	},
+	"license": "AGPL-3.0-only",
+	"private": true,
 	"scripts": {
 		"build": "nest build",
 		"format": "prettier --write \"src/**/*.ts\"",
