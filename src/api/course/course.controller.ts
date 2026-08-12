@@ -118,7 +118,6 @@ export class CourseController {
 
 			stream.pipe(res)
 		} catch (err) {
-			console.error(err)
 			res.status(500).end()
 		}
 	}

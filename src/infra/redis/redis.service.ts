@@ -4,7 +4,6 @@ import type { User } from '@prisma/generated'
 import { randomBytes } from 'crypto'
 import * as geoip from 'geoip-lite'
 import Redis from 'ioredis'
-import { ipToGeolocation } from 'location-from-ip'
 import { UAParser } from 'ua-parser-js'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -80,7 +79,7 @@ export class RedisService extends Redis implements OnModuleInit, OnModuleDestroy
 
 		const incognito = typeof lastVisit?.incognito === 'boolean' ? lastVisit.incognito : undefined
 
-		const geo = visitIp ? await ipToGeolocation(visitIp) : null
+		const geo = visitIp ? geoip.lookup(visitIp) : null
 
 		const session: Session = {
 			id: uuidv4(),
@@ -102,15 +101,13 @@ export class RedisService extends Redis implements OnModuleInit, OnModuleDestroy
 			geo: geo
 				? {
 						country: geo.country,
-						region: geo.state,
+						region: geo.region,
 						city: geo.city,
-						ll: [geo.latitude, geo.longitude],
-						zip: geo.zip,
-						calling_code: geo.calling_code,
-						continent: geo.continent,
-						currency_code: geo.currency_code,
+						ll: [geo.ll[0], geo.ll[1]],
 						timezone: geo.timezone,
-						is_eu_member: geo.is_eu_member
+						is_eu_member: geo.eu === '1',
+						metro: geo.metro,
+						accuracy_radius: geo.area
 					}
 				: null,
 			ua: uaResult.ua || null,

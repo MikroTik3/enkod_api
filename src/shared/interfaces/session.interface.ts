@@ -11,30 +11,23 @@ export interface Session {
 	userId: string
 }
 
-/**
- * Geolocation information based on IP.
- */
 export interface GeoInfo {
 	/** Two-letter ISO country code */
 	country: string
 	/** Region / state */
-	region: string
+	region?: string
 	/** City */
-	city: string
+	city?: string
 	/** Coordinates [latitude, longitude] */
-	ll: [number, number]
-	/** ZIP / postal code */
-	zip?: string
-	/** International calling code */
-	calling_code?: string
-	/** Continent code */
-	continent?: string
-	/** Currency code of the country */
-	currency_code?: string
+	ll?: [number, number]
 	/** Timezone string */
 	timezone?: string
 	/** Is country a member of EU */
 	is_eu_member?: boolean
+	/** Metro code */
+	metro?: number
+	/** Approximate accuracy radius in kilometers */
+	accuracy_radius?: number
 }
 
 /**
