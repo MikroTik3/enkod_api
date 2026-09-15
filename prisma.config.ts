@@ -6,6 +6,6 @@ config()
 export default defineConfig({
 	schema: 'prisma/schema.prisma',
 	datasource: {
-		url: env('POSTGRES_URI')
+		url: process.env.POSTGRES_URI || env('POSTGRES_URI'),
 	}
 })
