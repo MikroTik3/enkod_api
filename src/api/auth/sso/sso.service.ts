@@ -19,7 +19,7 @@ export class SsoService {
 
 	private readonly providerMap: Record<string, AccountProvider> = {
 		google: AccountProvider.GOOGLE,
-		telegram: AccountProvider.TELEGRAM,
+		// telegram: AccountProvider.TELEGRAM,
 		discord: AccountProvider.DISCORD,
 		github: AccountProvider.GITHUB
 	}
@@ -36,7 +36,7 @@ export class SsoService {
 	}
 
 	public async getAvailableMethods() {
-		return ['google', 'discord', 'telegram', 'github']
+		return ['google', 'discord', 'github']
 	}
 
 	public async fetchStatus(user: User) {
