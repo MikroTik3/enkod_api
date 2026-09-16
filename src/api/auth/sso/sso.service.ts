@@ -201,7 +201,7 @@ export class SsoService {
 		const url = new URL('https://oauth.telegram.org/auth')
 
 		url.searchParams.append('bot_id', this.TELEGRAM_BOT_ID)
-		url.searchParams.append('origin', 'https://mnclimate.com.ua')
+		url.searchParams.append('origin', 'https://enkod.top')
 		url.searchParams.append('embed', '1')
 		url.searchParams.append('request_access', 'write')
 		url.searchParams.append('return_to', action === 'connect' ? 'https://enkod.top/account/connections' : 'https://enkod.top/auth/telegram-oauth-finish')
