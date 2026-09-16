@@ -20,7 +20,8 @@ export class SsoService {
 	private readonly providerMap: Record<string, AccountProvider> = {
 		google: AccountProvider.GOOGLE,
 		telegram: AccountProvider.TELEGRAM,
-		discord: AccountProvider.DISCORD
+		discord: AccountProvider.DISCORD,
+		github: AccountProvider.GITHUB
 	}
 
 	public constructor(
@@ -203,7 +204,7 @@ export class SsoService {
 		url.searchParams.append('origin', 'https://mnclimate.com.ua')
 		url.searchParams.append('embed', '1')
 		url.searchParams.append('request_access', 'write')
-		url.searchParams.append('return_to', action === 'connect' ? 'https://mnclimate.com.ua/account/connections' : 'https://mnclimate.com.ua/auth/telegram-oauth-finish')
+		url.searchParams.append('return_to', action === 'connect' ? 'https://enkod.top/account/connections' : 'https://enkod.top/auth/telegram-oauth-finish')
 
 		return url.href
 	}
