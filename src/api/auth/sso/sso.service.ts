@@ -49,8 +49,8 @@ export class SsoService {
 		const status = {
 			google: accounts.some(account => account.provider === AccountProvider.GOOGLE),
 			discord: accounts.some(account => account.provider === AccountProvider.DISCORD),
-			telegram: accounts.some(account => account.provider === AccountProvider.TELEGRAM),
 			github: accounts.some(account => account.provider === AccountProvider.GITHUB)
+			// telegram: accounts.some(account => account.provider === AccountProvider.TELEGRAM),
 		}
 
 		return status
@@ -197,111 +197,111 @@ export class SsoService {
 		return session
 	}
 
-	public getTelegramAuthUrl(action: 'login' | 'connect') {
-		const url = new URL('https://oauth.telegram.org/auth')
+	// public getTelegramAuthUrl(action: 'login' | 'connect') {
+	// 	const url = new URL('https://oauth.telegram.org/auth')
 
-		url.searchParams.append('bot_id', this.TELEGRAM_BOT_ID)
-		url.searchParams.append('origin', 'https://enkod.top')
-		url.searchParams.append('embed', '1')
-		url.searchParams.append('request_access', 'write')
-		url.searchParams.append('return_to', action === 'connect' ? 'https://enkod.top/account/connections' : 'https://enkod.top/auth/telegram-oauth-finish')
+	// 	url.searchParams.append('bot_id', this.TELEGRAM_BOT_ID)
+	// 	url.searchParams.append('origin', 'https://enkod.top')
+	// 	url.searchParams.append('embed', '1')
+	// 	url.searchParams.append('request_access', 'write')
+	// 	url.searchParams.append('return_to', action === 'connect' ? 'https://enkod.top/account/connections' : 'https://enkod.top/auth/telegram-oauth-finish')
 
-		return url.href
-	}
+	// 	return url.href
+	// }
 
-	public async loginWithTelegram(dto: TelegramAuthRequest, ip: string, userAgent: string) {
-		const { id, first_name, username, photo_url, visitorId, requestId } = dto
+	// public async loginWithTelegram(dto: TelegramAuthRequest, ip: string, userAgent: string) {
+	// 	const { id, first_name, username, photo_url, visitorId, requestId } = dto
 
-		const account = await this.prismaService.externalAccount.findUnique({
-			where: {
-				providerAccountId: id.toString()
-			},
-			include: {
-				user: true
-			}
-		})
+	// 	const account = await this.prismaService.externalAccount.findUnique({
+	// 		where: {
+	// 			providerAccountId: id.toString()
+	// 		},
+	// 		include: {
+	// 			user: true
+	// 		}
+	// 	})
 
-		let user: User | null = account?.user ?? null
-		let isNewUser = false
+	// 	let user: User | null = account?.user ?? null
+	// 	let isNewUser = false
 
-		if (!user) {
-			user = await this.prismaService.user.create({
-				data: {
-					displayName: first_name,
-					username: username ? `${randomBytes(16).toString('hex')}_${username}` : randomBytes(16).toString('hex'),
-					avatar: photo_url,
-					externalAccounts: {
-						create: {
-							provider: AccountProvider.TELEGRAM,
-							providerAccountId: id.toString()
-						}
-					}
-				}
-			})
-			isNewUser = true
-		}
+	// 	if (!user) {
+	// 		user = await this.prismaService.user.create({
+	// 			data: {
+	// 				displayName: first_name,
+	// 				username: username ? `${randomBytes(16).toString('hex')}_${username}` : randomBytes(16).toString('hex'),
+	// 				avatar: photo_url,
+	// 				externalAccounts: {
+	// 					create: {
+	// 						provider: AccountProvider.TELEGRAM,
+	// 						providerAccountId: id.toString()
+	// 					}
+	// 				}
+	// 			}
+	// 		})
+	// 		isNewUser = true
+	// 	}
 
-		const session = await this.redisService.createSession(user, {
-			ip,
-			userAgent,
-			visitorId,
-			requestId
-		})
+	// 	const session = await this.redisService.createSession(user, {
+	// 		ip,
+	// 		userAgent,
+	// 		visitorId,
+	// 		requestId
+	// 	})
 
-		if (isNewUser) await this.botService.sendNewUser(user, session)
+	// 	if (isNewUser) await this.botService.sendNewUser(user, session)
 
-		return session
-	}
+	// 	return session
+	// }
 
-	public async connectWithTelegram(dto: TelegramAuthRequest, user: User) {
-		const { id } = dto
+	// public async connectWithTelegram(dto: TelegramAuthRequest, user: User) {
+	// 	const { id } = dto
 
-		const existing = await this.prismaService.externalAccount.findUnique({
-			where: {
-				providerAccountId: id.toString()
-			}
-		})
+	// 	const existing = await this.prismaService.externalAccount.findUnique({
+	// 		where: {
+	// 			providerAccountId: id.toString()
+	// 		}
+	// 	})
 
-		if (existing) throw new ConflictException("Цей Telegram-акаунт вже прив'язаний")
+	// 	if (existing) throw new ConflictException("Цей Telegram-акаунт вже прив'язаний")
 
-		await this.prismaService.externalAccount.create({
-			data: {
-				provider: AccountProvider.TELEGRAM,
-				providerAccountId: id.toString(),
-				user: {
-					connect: {
-						id: user.id
-					}
-				}
-			}
-		})
+	// 	await this.prismaService.externalAccount.create({
+	// 		data: {
+	// 			provider: AccountProvider.TELEGRAM,
+	// 			providerAccountId: id.toString(),
+	// 			user: {
+	// 				connect: {
+	// 					id: user.id
+	// 				}
+	// 			}
+	// 		}
+	// 	})
 
-		return true
-	}
+	// 	return true
+	// }
 
-	public validateTelegramUser(dto: TelegramAuthRequest): boolean {
-		const hash = dto.hash
+	// public validateTelegramUser(dto: TelegramAuthRequest): boolean {
+	// 	const hash = dto.hash
 
-		if (!hash) return false
+	// 	if (!hash) return false
 
-		const now = Math.floor(Date.now() / 1000)
-		const maxAge = 15 * 60
+	// 	const now = Math.floor(Date.now() / 1000)
+	// 	const maxAge = 15 * 60
 
-		if (Math.abs(now - dto.auth_date) > maxAge) return false
+	// 	if (Math.abs(now - dto.auth_date) > maxAge) return false
 
-		const dataCheckArr = Object.keys(dto)
-			.filter(k => k !== 'hash' && k !== 'visitorId' && k !== 'requestId')
-			.sort()
-			.map(k => `${k}=${dto[k]}`)
+	// 	const dataCheckArr = Object.keys(dto)
+	// 		.filter(k => k !== 'hash' && k !== 'visitorId' && k !== 'requestId')
+	// 		.sort()
+	// 		.map(k => `${k}=${dto[k]}`)
 
-		const dataCheckString = dataCheckArr.join('\n')
+	// 	const dataCheckString = dataCheckArr.join('\n')
 
-		const secretKey = createHash('sha256').update(this.TELEGRAM_BOT_TOKEN).digest()
+	// 	const secretKey = createHash('sha256').update(this.TELEGRAM_BOT_TOKEN).digest()
 
-		const hmac = createHmac('sha256', secretKey).update(dataCheckString).digest('hex')
+	// 	const hmac = createHmac('sha256', secretKey).update(dataCheckString).digest('hex')
 
-		return hmac === hash
-	}
+	// 	return hmac === hash
+	// }
 
 	public async unlink(provider: AllowedProvider, user: User) {
 		const account = await this.prismaService.externalAccount.findUnique({

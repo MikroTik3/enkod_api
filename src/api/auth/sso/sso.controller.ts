@@ -79,137 +79,137 @@ export class SsoController {
 		).toString('base64')
 
 		return {
-			url: provider === 'telegram' ? this.ssoService.getTelegramAuthUrl('login') : providerInstance.getAuthUrl(state)
+			url: providerInstance.getAuthUrl(state)
 		}
 	}
 
-	@ApiOperation({
-		summary: 'Get connect URL for external provider',
-		description: 'Generates the connect URL to link an external account to the current user.'
-	})
-	@ApiParam({
-		name: 'provider',
-		description: 'The external provider (google, github, etc.)',
-		required: true,
-		schema: { type: 'string' }
-	})
-	@ApiOkResponse({
-		type: SsoConnectResponse
-	})
-	@Authorization()
-	@Post('connect/:provider')
-	@HttpCode(HttpStatus.OK)
-	@UseGuards(ProviderGuard)
-	public async getConnectUrl(@Param('provider') provider: string, @Authorized() user: User) {
-		const providerInstance = this.sentinelService.findService(provider)
+	// @ApiOperation({
+	// 	summary: 'Get connect URL for external provider',
+	// 	description: 'Generates the connect URL to link an external account to the current user.'
+	// })
+	// @ApiParam({
+	// 	name: 'provider',
+	// 	description: 'The external provider (google, github, etc.)',
+	// 	required: true,
+	// 	schema: { type: 'string' }
+	// })
+	// @ApiOkResponse({
+	// 	type: SsoConnectResponse
+	// })
+	// @Authorization()
+	// @Post('connect/:provider')
+	// @HttpCode(HttpStatus.OK)
+	// @UseGuards(ProviderGuard)
+	// public async getConnectUrl(@Param('provider') provider: string, @Authorized() user: User) {
+	// 	const providerInstance = this.sentinelService.findService(provider)
 
-		const state = Buffer.from(JSON.stringify({ action: 'connect', userId: user.id })).toString('base64')
+	// 	const state = Buffer.from(JSON.stringify({ action: 'connect', userId: user.id })).toString('base64')
 
-		return {
-			url: provider === 'telegram' ? this.ssoService.getTelegramAuthUrl('connect') : providerInstance.getAuthUrl(state)
-		}
-	}
+	// 	return {
+	// 		url: provider === 'telegram' ? this.ssoService.getTelegramAuthUrl('connect') : providerInstance.getAuthUrl(state)
+	// 	}
+	// }
 
-	@ApiOperation({
-		summary: 'Callback from external provider',
-		description: 'Handles the callback from an external provider after login or connect action.'
-	})
-	@ApiParam({
-		name: 'provider',
-		description: 'The external provider (google, github, etc.)',
-		required: true,
-		schema: { type: 'string' }
-	})
-	@UseGuards(ProviderGuard)
-	@Get('callback/:provider')
-	@HttpCode(HttpStatus.OK)
-	public async callback(
-		@Query('code') code: string,
-		@Query('error') error: string,
-		@Query('state') state: string,
-		@Param('provider') provider: AllowedProvider,
-		@ClientIp() ip: string,
-		@UserAgent() userAgent: string,
-		@Res() res: Response
-	) {
-		const siteUrl = this.configService.get('hosts.app', { infer: true })
+	// @ApiOperation({
+	// 	summary: 'Callback from external provider',
+	// 	description: 'Handles the callback from an external provider after login or connect action.'
+	// })
+	// @ApiParam({
+	// 	name: 'provider',
+	// 	description: 'The external provider (google, github, etc.)',
+	// 	required: true,
+	// 	schema: { type: 'string' }
+	// })
+	// @UseGuards(ProviderGuard)
+	// @Get('callback/:provider')
+	// @HttpCode(HttpStatus.OK)
+	// public async callback(
+	// 	@Query('code') code: string,
+	// 	@Query('error') error: string,
+	// 	@Query('state') state: string,
+	// 	@Param('provider') provider: AllowedProvider,
+	// 	@ClientIp() ip: string,
+	// 	@UserAgent() userAgent: string,
+	// 	@Res() res: Response
+	// ) {
+	// 	const siteUrl = this.configService.get('hosts.app', { infer: true })
 
-		if (error) {
-			const parsedState = state ? JSON.parse(Buffer.from(state, 'base64').toString('utf-8')) : null
+	// 	if (error) {
+	// 		const parsedState = state ? JSON.parse(Buffer.from(state, 'base64').toString('utf-8')) : null
 
-			if (parsedState?.action === 'connect') {
-				return res.redirect(`${siteUrl}/account/connections?error=${error}`)
-			} else if (parsedState?.action === 'login') {
-				return res.redirect(`${siteUrl}/auth/login?error=${error}`)
-			} else {
-				return res.redirect(`${siteUrl}?error=${error}`)
-			}
-		}
+	// 		if (parsedState?.action === 'connect') {
+	// 			return res.redirect(`${siteUrl}/account/connections?error=${error}`)
+	// 		} else if (parsedState?.action === 'login') {
+	// 			return res.redirect(`${siteUrl}/auth/login?error=${error}`)
+	// 		} else {
+	// 			return res.redirect(`${siteUrl}?error=${error}`)
+	// 		}
+	// 	}
 
-		if (!code) throw new BadRequestException('No code provided')
+	// 	if (!code) throw new BadRequestException('No code provided')
 
-		const parsedState = state ? JSON.parse(Buffer.from(state, 'base64').toString('utf-8')) : null
+	// 	const parsedState = state ? JSON.parse(Buffer.from(state, 'base64').toString('utf-8')) : null
 
-		try {
-			if (parsedState.action === 'connect' && parsedState.userId) {
-				await this.ssoService.connect(provider, code, parsedState.userId)
+	// 	try {
+	// 		if (parsedState.action === 'connect' && parsedState.userId) {
+	// 			await this.ssoService.connect(provider, code, parsedState.userId)
 
-				return res.redirect(`${siteUrl}/account/connections`)
-			} else if (parsedState.action === 'login') {
-				const result = await this.ssoService.login(provider, code, ip, userAgent, {
-					visitorId: parsedState.visitorId,
-					requestId: parsedState.requestId
-				})
+	// 			return res.redirect(`${siteUrl}/account/connections`)
+	// 		} else if (parsedState.action === 'login') {
+	// 			const result = await this.ssoService.login(provider, code, ip, userAgent, {
+	// 				visitorId: parsedState.visitorId,
+	// 				requestId: parsedState.requestId
+	// 			})
 
-				return res.redirect(`${siteUrl}/auth/callback#token=${result.token}`)
-			} else {
-				throw new BadRequestException('Unknown action in state')
-			}
-		} catch (error) {
-			const message = error?.message ?? 'unknown'
+	// 			return res.redirect(`${siteUrl}/auth/callback#token=${result.token}`)
+	// 		} else {
+	// 			throw new BadRequestException('Unknown action in state')
+	// 		}
+	// 	} catch (error) {
+	// 		const message = error?.message ?? 'unknown'
 
-			let errorCode = 'unknown'
+	// 		let errorCode = 'unknown'
 
-			if (message.includes('уже привязан')) errorCode = 'already-linked'
-			else if (message.includes('почтой')) errorCode = 'email-taken'
+	// 		if (message.includes('уже привязан')) errorCode = 'already-linked'
+	// 		else if (message.includes('почтой')) errorCode = 'email-taken'
 
-			if (parsedState.action === 'connect') {
-				return res.redirect(`${siteUrl}/account/connections?error=${errorCode}`)
-			}
-		}
-	}
+	// 		if (parsedState.action === 'connect') {
+	// 			return res.redirect(`${siteUrl}/account/connections?error=${errorCode}`)
+	// 		}
+	// 	}
+	// }
 
-	@ApiOperation({
-		summary: 'Telegram OAuth Callback',
-		description: 'Handles the callback from Telegram login. Validates the Telegram data and creates a session for the user.'
-	})
-	@ApiOkResponse({
-		type: TelegramAuthResponse
-	})
-	@Post('callback/telegram')
-	@HttpCode(HttpStatus.OK)
-	public async telegramCallback(@Body() dto: TelegramAuthRequest, @ClientIp() ip: string, @UserAgent() userAgent: string) {
-		const isValid = this.ssoService.validateTelegramUser(dto)
+	// @ApiOperation({
+	// 	summary: 'Telegram OAuth Callback',
+	// 	description: 'Handles the callback from Telegram login. Validates the Telegram data and creates a session for the user.'
+	// })
+	// @ApiOkResponse({
+	// 	type: TelegramAuthResponse
+	// })
+	// @Post('callback/telegram')
+	// @HttpCode(HttpStatus.OK)
+	// public async telegramCallback(@Body() dto: TelegramAuthRequest, @ClientIp() ip: string, @UserAgent() userAgent: string) {
+	// 	const isValid = this.ssoService.validateTelegramUser(dto)
 
-		if (!isValid) throw new BadRequestException('Invalid Telegram data')
+	// 	if (!isValid) throw new BadRequestException('Invalid Telegram data')
 
-		return await this.ssoService.loginWithTelegram(dto, ip, userAgent)
-	}
+	// 	return await this.ssoService.loginWithTelegram(dto, ip, userAgent)
+	// }
 
-	@ApiOperation({
-		summary: 'Telegram Connect Callback',
-		description: 'Handles Telegram OAuth result and links Telegram account to the current user.'
-	})
-	@Authorization()
-	@Post('telegram/connect-callback')
-	@HttpCode(HttpStatus.OK)
-	public async telegramConnectCallback(@Body() dto: TelegramAuthRequest, @Authorized() user: User) {
-		const isValid = this.ssoService.validateTelegramUser(dto)
+	// @ApiOperation({
+	// 	summary: 'Telegram Connect Callback',
+	// 	description: 'Handles Telegram OAuth result and links Telegram account to the current user.'
+	// })
+	// @Authorization()
+	// @Post('telegram/connect-callback')
+	// @HttpCode(HttpStatus.OK)
+	// public async telegramConnectCallback(@Body() dto: TelegramAuthRequest, @Authorized() user: User) {
+	// 	const isValid = this.ssoService.validateTelegramUser(dto)
 
-		if (!isValid) throw new BadRequestException('Invalid Telegram data')
+	// 	if (!isValid) throw new BadRequestException('Invalid Telegram data')
 
-		return this.ssoService.connectWithTelegram(dto, user)
-	}
+	// 	return this.ssoService.connectWithTelegram(dto, user)
+	// }
 
 	@ApiOperation({
 		summary: 'Unlink External Account',
