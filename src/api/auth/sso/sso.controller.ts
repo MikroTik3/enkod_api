@@ -161,6 +161,8 @@ export class SsoController {
 					requestId: parsedState.requestId
 				})
 
+				console.log(result)
+
 				return res.redirect(`${siteUrl}/auth/callback#token=${result.token}`)
 			} else {
 				throw new BadRequestException('Unknown action in state')
@@ -178,38 +180,6 @@ export class SsoController {
 			}
 		}
 	}
-
-	// @ApiOperation({
-	// 	summary: 'Telegram OAuth Callback',
-	// 	description: 'Handles the callback from Telegram login. Validates the Telegram data and creates a session for the user.'
-	// })
-	// @ApiOkResponse({
-	// 	type: TelegramAuthResponse
-	// })
-	// @Post('callback/telegram')
-	// @HttpCode(HttpStatus.OK)
-	// public async telegramCallback(@Body() dto: TelegramAuthRequest, @ClientIp() ip: string, @UserAgent() userAgent: string) {
-	// 	const isValid = this.ssoService.validateTelegramUser(dto)
-
-	// 	if (!isValid) throw new BadRequestException('Invalid Telegram data')
-
-	// 	return await this.ssoService.loginWithTelegram(dto, ip, userAgent)
-	// }
-
-	// @ApiOperation({
-	// 	summary: 'Telegram Connect Callback',
-	// 	description: 'Handles Telegram OAuth result and links Telegram account to the current user.'
-	// })
-	// @Authorization()
-	// @Post('telegram/connect-callback')
-	// @HttpCode(HttpStatus.OK)
-	// public async telegramConnectCallback(@Body() dto: TelegramAuthRequest, @Authorized() user: User) {
-	// 	const isValid = this.ssoService.validateTelegramUser(dto)
-
-	// 	if (!isValid) throw new BadRequestException('Invalid Telegram data')
-
-	// 	return this.ssoService.connectWithTelegram(dto, user)
-	// }
 
 	@ApiOperation({
 		summary: 'Unlink External Account',

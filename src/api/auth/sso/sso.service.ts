@@ -117,52 +117,13 @@ export class SsoService {
 		let isNewUser = false
 
 		if (!user) {
-			user = await this.prismaService.user.findUnique({
-				where: {
-					email: external.email
-				}
-			})
-
-			if (user) {
-				const alreadyLinked = await this.prismaService.externalAccount.findFirst({
-					where: {
-						provider: providerEnum,
-						userId: user.id
-					}
-				})
-
-				if (!alreadyLinked) {
-					await this.prismaService.externalAccount.create({
-						data: {
-							provider: providerEnum,
-							providerAccountId: external.id,
-							refreshToken: external.refreshToken,
-							accessToken: external.accessToken,
-							expiry: external.expiry,
-							user: {
-								connect: {
-									id: user.id
-								}
-							}
-						}
-					})
-				}
-			} else {
-				const token = randomBytes(64).toString('hex')
-
+			if (provider === AllowedProvider.TELEGRAM) {
 				user = await this.prismaService.user.create({
 					data: {
 						displayName: external.name,
-						username: slugify(`${external.email}-${external.name}`),
-						email: external.email,
+						username: external ? `${randomBytes(16).toString('hex')}_${external.username}` : randomBytes(16).toString('hex'),
 						avatar: external.avatar,
-						emailVerification: {
-							create: {
-								status: EmailVerificationStatus.VERIFIED,
-								token,
-								expiry: null
-							}
-						},
+
 						externalAccounts: {
 							create: {
 								provider: providerEnum,
@@ -176,6 +137,69 @@ export class SsoService {
 				})
 
 				isNewUser = true
+			} else {
+				user = await this.prismaService.user.findUnique({
+					where: {
+						email: external.email
+					}
+				})
+
+				if (user) {
+					const alreadyLinked = await this.prismaService.externalAccount.findFirst({
+						where: {
+							provider: providerEnum,
+							userId: user.id
+						}
+					})
+
+					if (!alreadyLinked) {
+						await this.prismaService.externalAccount.create({
+							data: {
+								provider: providerEnum,
+								providerAccountId: external.id,
+								refreshToken: external.refreshToken,
+								accessToken: external.accessToken,
+								expiry: external.expiry,
+								user: {
+									connect: {
+										id: user.id
+									}
+								}
+							}
+						})
+					}
+				} else {
+					const token = randomBytes(64).toString('hex')
+
+					user = await this.prismaService.user.create({
+						data: {
+							displayName: external.name,
+							username: slugify(`${external.email}-${external.name}`),
+							email: external.email,
+							avatar: external.avatar,
+
+							emailVerification: {
+								create: {
+									status: EmailVerificationStatus.VERIFIED,
+									token,
+									expiry: null
+								}
+							},
+
+							externalAccounts: {
+								create: {
+									provider: providerEnum,
+									providerAccountId: external.id,
+									refreshToken: external.refreshToken,
+									accessToken: external.accessToken,
+									expiry: external.expiry
+								}
+							}
+						}
+					})
+
+					isNewUser = true
+				}
 			}
 		}
 
