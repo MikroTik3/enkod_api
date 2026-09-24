@@ -6,7 +6,7 @@ import { IS_DEV_ENV } from '../utils'
 
 @Injectable()
 export class EnhancedThrottlerGuard extends ThrottlerGuard {
-	private readonly logger = new Logger(EnhancedThrottlerGuard.name)
+	private readonly throttlerLogger = new Logger(EnhancedThrottlerGuard.name)
 
 	public async canActivate(context: ExecutionContext): Promise<boolean> {
 		if (context.getType() !== 'http') return true
@@ -28,13 +28,11 @@ export class EnhancedThrottlerGuard extends ThrottlerGuard {
 		const { context, limit, ttl } = requestProps
 
 		const request = context.switchToHttp().getRequest()
-
 		const tracker = await this.getTracker(request)
-
 		const isAllowed = await super.handleRequest(requestProps)
 
 		if (!isAllowed) {
-			this.logger.warn(`Throttling triggered! IP: ${tracker}, limit: ${limit}, ttl: ${ttl}s`)
+			this.throttlerLogger.warn(`Throttling triggered! IP: ${tracker}, limit: ${limit}, ttl: ${ttl}s`)
 
 			throw new ThrottlerException(`Too many requests from your IP (${tracker}). Chill the fuck out and try again in ${ttl} seconds.`)
 		}
