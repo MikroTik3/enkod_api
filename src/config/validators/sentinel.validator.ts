@@ -21,4 +21,10 @@ export class SentinelValidator {
 
 	@IsString()
 	public GITHUB_CLIENT_SECRET: string
+
+	@IsString()
+	public TELEGRAM_CLIENT_ID: string
+
+	@IsString()
+	public TELEGRAM_CLIENT_SECRET: string
 }

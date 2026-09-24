@@ -1,5 +1,5 @@
+import { DiscordProvider, GithubProvider, GoogleProvider, SentinelOptions, TelegramProvider } from '@docenko/sentinel-auth'
 import { ConfigService } from '@nestjs/config'
-import { DiscordProvider, GithubProvider, GoogleProvider, SentinelOptions } from '@teacoder/sentinel'
 
 import type { AllConfigs } from '../definitions'
 
@@ -33,6 +33,15 @@ export function getOAuthConfig(configService: ConfigService<AllConfigs>): Sentin
 					infer: true
 				}),
 				scopes: ['user:email', 'user:profile']
+			}),
+			new TelegramProvider({
+				clientId: configService.get('sentinel.telegram.clientId', {
+					infer: true
+				}),
+				clientSecret: configService.get('sentinel.telegram.clientSecret', {
+					infer: true
+				}),
+				scopes: ['openid', 'profile']
 			})
 		]
 	}

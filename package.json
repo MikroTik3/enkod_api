@@ -23,6 +23,7 @@
 		"db:push": "npx prisma db push"
 	},
 	"dependencies": {
+		"@docenko/sentinel-auth": "^1.2.1",
 		"@fingerprintjs/fingerprintjs-pro-server-api": "^6.10.0",
 		"@nest-lab/throttler-storage-redis": "^1.1.0",
 		"@nestjs-modules/mailer": "^2.0.2",

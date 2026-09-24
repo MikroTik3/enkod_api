@@ -1,6 +1,6 @@
+import { SentinelService } from '@docenko/sentinel-auth'
 import { type CanActivate, type ExecutionContext, Injectable, NotFoundException } from '@nestjs/common'
 import { AccountProvider } from '@prisma/generated'
-import { SentinelService } from '@teacoder/sentinel'
 import type { Request } from 'express'
 
 @Injectable()

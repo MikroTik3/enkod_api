@@ -8,4 +8,5 @@ export interface SentinelConfig {
 	google: SentinelProviderConfig
 	discord: SentinelProviderConfig
 	github: SentinelProviderConfig
+	telegram: SentinelProviderConfig
 }

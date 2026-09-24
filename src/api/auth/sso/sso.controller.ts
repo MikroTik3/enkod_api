@@ -1,8 +1,8 @@
+import { AllowedProvider, SentinelService } from '@docenko/sentinel-auth'
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, Res, UseGuards } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import type { User } from '@prisma/generated'
-import { AllowedProvider, SentinelService } from '@teacoder/sentinel'
 import type { Response } from 'express'
 
 import { AllConfigs } from '@/config/definitions'

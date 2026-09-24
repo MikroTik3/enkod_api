@@ -1,16 +1,14 @@
+import { AllowedProvider, SentinelService } from '@docenko/sentinel-auth'
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { AccountProvider, EmailVerificationStatus, type User } from '@prisma/generated'
-import { AllowedProvider, SentinelService } from '@teacoder/sentinel'
-import { createHash, createHmac, randomBytes } from 'crypto'
+import { randomBytes } from 'crypto'
 
 import { ManagerBotService } from '@/bots/manager/manager.bot.service'
 import { AllConfigs } from '@/config/definitions'
 import { PrismaService } from '@/infra/prisma/prisma.service'
 import { RedisService } from '@/infra/redis/redis.service'
 import { slugify } from '@/shared/utils/slugify'
-
-import { TelegramAuthRequest } from './dto'
 
 @Injectable()
 export class SsoService {
@@ -19,9 +17,9 @@ export class SsoService {
 
 	private readonly providerMap: Record<string, AccountProvider> = {
 		google: AccountProvider.GOOGLE,
-		// telegram: AccountProvider.TELEGRAM,
 		discord: AccountProvider.DISCORD,
-		github: AccountProvider.GITHUB
+		github: AccountProvider.GITHUB,
+		telegram: AccountProvider.TELEGRAM
 	}
 
 	public constructor(
@@ -36,7 +34,7 @@ export class SsoService {
 	}
 
 	public async getAvailableMethods() {
-		return ['google', 'discord', 'github']
+		return ['google', 'discord', 'github', 'telegram']
 	}
 
 	public async fetchStatus(user: User) {
@@ -49,8 +47,8 @@ export class SsoService {
 		const status = {
 			google: accounts.some(account => account.provider === AccountProvider.GOOGLE),
 			discord: accounts.some(account => account.provider === AccountProvider.DISCORD),
-			github: accounts.some(account => account.provider === AccountProvider.GITHUB)
-			// telegram: accounts.some(account => account.provider === AccountProvider.TELEGRAM),
+			github: accounts.some(account => account.provider === AccountProvider.GITHUB),
+			telegram: accounts.some(account => account.provider === AccountProvider.TELEGRAM)
 		}
 
 		return status
@@ -196,112 +194,6 @@ export class SsoService {
 
 		return session
 	}
-
-	// public getTelegramAuthUrl(action: 'login' | 'connect') {
-	// 	const url = new URL('https://oauth.telegram.org/auth')
-
-	// 	url.searchParams.append('bot_id', this.TELEGRAM_BOT_ID)
-	// 	url.searchParams.append('origin', 'https://enkod.top')
-	// 	url.searchParams.append('embed', '1')
-	// 	url.searchParams.append('request_access', 'write')
-	// 	url.searchParams.append('return_to', action === 'connect' ? 'https://enkod.top/account/connections' : 'https://enkod.top/auth/telegram-oauth-finish')
-
-	// 	return url.href
-	// }
-
-	// public async loginWithTelegram(dto: TelegramAuthRequest, ip: string, userAgent: string) {
-	// 	const { id, first_name, username, photo_url, visitorId, requestId } = dto
-
-	// 	const account = await this.prismaService.externalAccount.findUnique({
-	// 		where: {
-	// 			providerAccountId: id.toString()
-	// 		},
-	// 		include: {
-	// 			user: true
-	// 		}
-	// 	})
-
-	// 	let user: User | null = account?.user ?? null
-	// 	let isNewUser = false
-
-	// 	if (!user) {
-	// 		user = await this.prismaService.user.create({
-	// 			data: {
-	// 				displayName: first_name,
-	// 				username: username ? `${randomBytes(16).toString('hex')}_${username}` : randomBytes(16).toString('hex'),
-	// 				avatar: photo_url,
-	// 				externalAccounts: {
-	// 					create: {
-	// 						provider: AccountProvider.TELEGRAM,
-	// 						providerAccountId: id.toString()
-	// 					}
-	// 				}
-	// 			}
-	// 		})
-	// 		isNewUser = true
-	// 	}
-
-	// 	const session = await this.redisService.createSession(user, {
-	// 		ip,
-	// 		userAgent,
-	// 		visitorId,
-	// 		requestId
-	// 	})
-
-	// 	if (isNewUser) await this.botService.sendNewUser(user, session)
-
-	// 	return session
-	// }
-
-	// public async connectWithTelegram(dto: TelegramAuthRequest, user: User) {
-	// 	const { id } = dto
-
-	// 	const existing = await this.prismaService.externalAccount.findUnique({
-	// 		where: {
-	// 			providerAccountId: id.toString()
-	// 		}
-	// 	})
-
-	// 	if (existing) throw new ConflictException("Цей Telegram-акаунт вже прив'язаний")
-
-	// 	await this.prismaService.externalAccount.create({
-	// 		data: {
-	// 			provider: AccountProvider.TELEGRAM,
-	// 			providerAccountId: id.toString(),
-	// 			user: {
-	// 				connect: {
-	// 					id: user.id
-	// 				}
-	// 			}
-	// 		}
-	// 	})
-
-	// 	return true
-	// }
-
-	// public validateTelegramUser(dto: TelegramAuthRequest): boolean {
-	// 	const hash = dto.hash
-
-	// 	if (!hash) return false
-
-	// 	const now = Math.floor(Date.now() / 1000)
-	// 	const maxAge = 15 * 60
-
-	// 	if (Math.abs(now - dto.auth_date) > maxAge) return false
-
-	// 	const dataCheckArr = Object.keys(dto)
-	// 		.filter(k => k !== 'hash' && k !== 'visitorId' && k !== 'requestId')
-	// 		.sort()
-	// 		.map(k => `${k}=${dto[k]}`)
-
-	// 	const dataCheckString = dataCheckArr.join('\n')
-
-	// 	const secretKey = createHash('sha256').update(this.TELEGRAM_BOT_TOKEN).digest()
-
-	// 	const hmac = createHmac('sha256', secretKey).update(dataCheckString).digest('hex')
-
-	// 	return hmac === hash
-	// }
 
 	public async unlink(provider: AllowedProvider, user: User) {
 		const account = await this.prismaService.externalAccount.findUnique({

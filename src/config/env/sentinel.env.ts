@@ -20,6 +20,10 @@ export const sentinelEnv = registerAs<SentinelConfig>('sentinel', () => {
 		github: {
 			clientId: process.env.GITHUB_CLIENT_ID,
 			clientSecret: process.env.GITHUB_CLIENT_SECRET
+		},
+		telegram: {
+			clientId: process.env.TELEGRAM_CLIENT_ID,
+			clientSecret: process.env.TELEGRAM_CLIENT_SECRET
 		}
 	}
 })

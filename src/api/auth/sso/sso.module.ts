@@ -1,6 +1,6 @@
+import { SentinelModule } from '@docenko/sentinel-auth'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { SentinelModule } from '@teacoder/sentinel'
 
 import { ManagerBotModule } from '@/bots/manager/manager.bot.module'
 import { getOAuthConfig } from '@/config'
