@@ -40,6 +40,7 @@ export class AccountService {
 		return {
 			id: user.id,
 			displayName: user.displayName,
+			username: user.username,
 			email: user.email,
 			avatar: user.avatar,
 			isEmailVerified,

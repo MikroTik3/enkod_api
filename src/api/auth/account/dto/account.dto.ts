@@ -14,6 +14,12 @@ export class AccountResponse {
 	public displayName: string
 
 	@ApiProperty({
+		description: 'Username',
+		example: '@docenko20034'
+	})
+	public username: string
+
+	@ApiProperty({
 		description: 'Email address',
 		example: 'john.doe@example.com'
 	})
